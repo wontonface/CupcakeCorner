@@ -21,6 +21,8 @@ class Order: Codable {
         case _zip = "zip"
     }
     
+    // MARK: - Cupcake customization
+    
     static let types = ["Vanilla", "Strawberry", "Chocolate", "Rainbow"]
     
     var type = 0
@@ -37,18 +39,29 @@ class Order: Codable {
     var extraFrosting = false
     var addSprinkles = false
     
+    // MARK: - Delivery info
+    
     var name = ""
     var streetAddress = ""
     var city = ""
     var zip = ""
     
+    var savedAddresses: [DeliveryAddress] = [] {
+        didSet {
+            saveAddresses()
+        }
+    }
+    
+    // MARK: - Validation
+    
     var hasValidAddress: Bool {
-        if name.isEmpty || streetAddress.isEmpty || city.isEmpty || zip.isEmpty {
+        if name.trimmingCharacters(in: .whitespaces).isEmpty || streetAddress.trimmingCharacters(in: .whitespaces).isEmpty || city.trimmingCharacters(in: .whitespaces).isEmpty || zip.trimmingCharacters(in: .whitespaces).isEmpty {
             return false
         }
-        
         return true
     }
+    
+    // MARK: - Pricing logic
     
     var cost: Decimal {
         // $2 per cake
@@ -70,4 +83,44 @@ class Order: Codable {
         return cost
     }
     
+    // MARK: - UserDefaults methods
+    
+    private static func loadAddresses() -> [DeliveryAddress] {
+        guard let data = UserDefaults.standard.data(forKey: UserDefaultsKeys.addresses) else {
+            return []
+        }
+        
+        do {
+            let decoded = try JSONDecoder().decode([DeliveryAddress].self, from: data)
+            print("Successfully loaded \(decoded.count) addresses:")
+            decoded.forEach { address in
+                print("- \(address.personName): \(address.addressName), \(address.cityName), \(address.zipCode)")
+            }
+            return decoded
+        } catch {
+            print("Error loading addresses: \(error.localizedDescription)")
+            return []
+        }
+    }
+    
+    private func saveAddresses() {
+        print("Saving \(savedAddresses.count) addresses to UserDefaults:")
+        savedAddresses.forEach { address in
+            print("- \(address.personName): \(address.addressName), \(address.cityName), \(address.zipCode)")
+        }
+        
+        do {
+            let encoded = try JSONEncoder().encode(savedAddresses)
+            UserDefaults.standard.set(encoded, forKey: UserDefaultsKeys.addresses)
+            print("Successfully saved addresses to UserDefaults")
+  
+        } catch {
+            print("Error saving addresses: \(error.localizedDescription)")
+        }
+    }
+    
+    
+    
 }
+
+

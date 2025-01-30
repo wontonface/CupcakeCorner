@@ -9,6 +9,18 @@ import SwiftUI
 
 struct AddressView: View {
     @Bindable var order: Order
+    @State private var showingSaveConfirmation = false
+    
+    func saveAddress() {
+        let newAddress = DeliveryAddress(
+            personName: order.name,
+            addressName: order.streetAddress,
+            cityName: order.city,
+            zipCode: order.zip
+        )
+        order.savedAddresses.append(newAddress)
+        showingSaveConfirmation = true
+    }
     
     var body: some View {
         Form {
@@ -17,6 +29,9 @@ struct AddressView: View {
                 TextField("Address", text: $order.streetAddress)
                 TextField("City", text: $order.city)
                 TextField("Zip", text: $order.zip)
+                Button("Save my address for next time") {
+                    saveAddress()
+                }
             }
             
             Section {
@@ -28,6 +43,11 @@ struct AddressView: View {
         }
         .navigationTitle("Delivery details")
         .navigationBarTitleDisplayMode(.inline)
+        .alert("Address saved", isPresented: $showingSaveConfirmation) {
+            Button("OK") {  }
+        } message: {
+            Text("Your address has been saved for future orders.")
+        }
     }
 }
 
